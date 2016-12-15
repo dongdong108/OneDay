@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/item1"
+            android:icon="@mipmap/ic_history"
+            android:checked="true"
+            android:title="@string/hp_title_name1"
+            >
+        </item>
+        <item android:id="@+id/item2"
+            android:icon="@mipmap/icon_gril"
+            android:checked="true"
+            android:title="@string/hp_title_name2"
+            >
+        </item>
+        <item android:id="@+id/item3"
+            android:icon="@mipmap/ic_unlike"
+            android:title="@string/hp_title_name3"
+            android:checked="true"
+            >
+        </item>
+        <item android:id="@+id/item4"
+            android:icon="@mipmap/ic_about"
+            android:title="@string/hp_title_name4"
+            android:checked="true">
+        </item>
+    </group>
+
+</menu>

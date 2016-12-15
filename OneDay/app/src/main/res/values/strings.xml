@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">OneDay</string>
+    <string name="hp_title_name1">历史上的今天</string>
+    <string name="hp_title_name2">妹纸</string>
+    <string name="hp_title_name3">收藏</string>
+    <string name="hp_title_name4">关于</string>
+</resources>

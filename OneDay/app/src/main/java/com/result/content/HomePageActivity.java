@@ -1,5 +1,6 @@
 package com.result.content;
 
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -7,9 +8,11 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -30,6 +33,7 @@ public class HomePageActivity extends AppCompatActivity {
     private CollectFragment mCollectFragment;
     private GirlFragment mGirlFragment;
     private AsRegardsFragment mAsRegardsFragment;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,4 +117,33 @@ public class HomePageActivity extends AppCompatActivity {
         mToolBar.setTitleTextColor(Color.parseColor("#FFFFFF"));
         setSupportActionBar(mToolBar);
     }
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK ){
+            AlertDialog.Builder builder=new AlertDialog.Builder(this);  //先得到构造器
+            builder.setTitle("提示"); //设置标题
+            builder.setMessage("您确认要退出么?"); //设置内容
+            builder.setPositiveButton("确定", new DialogInterface.OnClickListener() { //设置确定按钮
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    finish();
+                    System.exit(0);
+                    dialog.dismiss();
+                }
+            });
+            builder.setNegativeButton("取消", new DialogInterface.OnClickListener() { //设置取消按钮
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            //参数都设置完成了，创建并显示出来
+            builder.create().show();
+
+        }
+
+        return false;
+
+    }
+
 }

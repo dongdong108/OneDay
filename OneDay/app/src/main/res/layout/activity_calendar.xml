@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="com.result.details.CalendarActivity">
+
+    <!-- 顶部栏 -->
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/cale_toolBar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorHpBack"
+        app:layout_collapseMode="pin"
+        app:theme="@style/toolBar3">
+    </android.support.v7.widget.Toolbar>
+
+    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cale_toolBar"
+        android:id="@+id/view">
+    </com.prolificinteractive.materialcalendarview.MaterialCalendarView>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/cale_btn_text"
+        android:textColor="@color/colorHpTitle"
+        android:id="@+id/cale_btn"
+        android:background="@color/colorHpBack"
+        android:layout_below="@+id/view"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+</RelativeLayout>

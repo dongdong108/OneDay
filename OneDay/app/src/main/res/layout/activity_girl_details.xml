@@ -17,7 +17,8 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/colorHpBack"
-            app:layout_collapseMode="pin"  >
+            app:layout_collapseMode="pin"
+            app:theme="@style/toolBar3">
         </android.support.v7.widget.Toolbar>
 
         <ImageView

@@ -20,15 +20,11 @@ import java.util.ArrayList;
 public class MyHpRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements View.OnClickListener{
     private Context context;
     private ArrayList<HpBean.ResultBean> list;
-    private int month;
-    private int day;
 
 
-    public MyHpRecyclerViewAdapter(Context context, ArrayList<HpBean.ResultBean> list,int month, int day) {
+    public MyHpRecyclerViewAdapter(Context context, ArrayList<HpBean.ResultBean> list) {
         this.context = context;
         this.list = list;
-        this.month = month;
-        this.day = day;
     }
 
     private OnRecyclerViewItemClickListener mOnItemClickListener = null;
@@ -54,7 +50,7 @@ public class MyHpRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         ((myViewHolder)holder).tvTitle.setText(list.get(position).getTitle());
-        ((myViewHolder)holder).tvYear.setText(list.get(position).getYear()+"年"+month+"月"+day+"日");
+        ((myViewHolder)holder).tvYear.setText(list.get(position).getDate());
         //将数据保存在itemView的Tag中，以便点击时进行获取
         holder.itemView.setTag(list.get(position));
     }

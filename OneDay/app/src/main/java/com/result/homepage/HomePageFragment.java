@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -18,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.result.R;
@@ -33,6 +31,7 @@ import com.result.tools.CollEvent;
 import com.result.tools.FirstEvent_Rili;
 import com.result.tools.Network;
 import com.result.tools.OkHttp;
+import com.result.utils.DateUtil;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -77,11 +76,7 @@ public class HomePageFragment extends BaseFragment implements View.OnClickListen
 
     private Calendar mCalendar = Calendar.getInstance();//使用默认时区和语言环境获得一个日历。
     private SimpleDateFormat dateFormat;
-    private int month;
-    private int day;
-    private int month2;
-    private int day2;
-    private int year;
+    private String date;
 
     @Nullable
     @Override
@@ -103,7 +98,6 @@ public class HomePageFragment extends BaseFragment implements View.OnClickListen
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (type != -1) {
-
             //注册EventBus，哪里需要值哪里就需要注册
             EventBus.getDefault().register(this);
             mActivity = getActivity();
@@ -113,6 +107,9 @@ public class HomePageFragment extends BaseFragment implements View.OnClickListen
 
             mHomePageActivity.setSupportActionBar(hpToolBar);
             fabAddComment.setOnClickListener(this);
+            /**
+             * 获取系统时间
+             */
             initView();
 
             hpSrl.setColorSchemeResources(R.color.colorAccent,
@@ -122,22 +119,16 @@ public class HomePageFragment extends BaseFragment implements View.OnClickListen
             hpSrl.setSize(SwipeRefreshLayout.LARGE);
             hpSrl.setProgressBackgroundColor(R.color.colorHpTitle);
             hpSrl.setProgressViewEndTarget(true, 200);
+            //下拉刷新
             hpSrl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
                 public void onRefresh() {
-                    new Thread() {
+                    new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            list.clear();
-                            addDatas(month,day);
-                            try {
-                                Thread.sleep(3000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            mHandler.sendEmptyMessage(1);
+                            hpSrl.setRefreshing(false);
                         }
-                    }.start();
+                    },1000);
                 }
             });
         }
@@ -146,64 +137,53 @@ public class HomePageFragment extends BaseFragment implements View.OnClickListen
     /**
      * 获取系统时间
      */
-
     private void initView() {
 
         //改变日期方法
         changeDate(mCalendar);
 
-        //设置箭头监听
         xiangzuo1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+//                //取当前日期的前一天.
                 list.clear();
-                //取当前日期的前一天.
-                mCalendar.add(Calendar.DAY_OF_MONTH, -1);
-                changeDate(mCalendar);
-//                notifyAll();
+                DateUtil.num = -1;
+                date = DateUtil.getDateStr(data.getText().toString(), DateUtil.num);
+                data.setText(date);
+                int month3 = Integer.parseInt(DateUtil.getMonth(date));
+                int day3 = Integer.parseInt(DateUtil.getMonthDate(date));
+                addDatas(month3,day3);
             }
         });
         xiangyou1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+//                //取当前日期的后一天.
                 list.clear();
-                //取当前日期的前一天.
-                mCalendar.add(Calendar.DAY_OF_MONTH, +1);
-                changeDate(mCalendar);
+                DateUtil.num = 1;
+                date = DateUtil.getDateStr(data.getText().toString(), DateUtil.num);
+                data.setText(date);
+                int month3 = Integer.parseInt(DateUtil.getMonth(date));
+                int day3 = Integer.parseInt(DateUtil.getMonthDate(date));
+                addDatas(month3,day3);
             }
         });
+
     }
 
     private void changeDate(Calendar mCalendar) {
         //格式化日期
         dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        data.setText(dateFormat.format(mCalendar.getTime()));
+
         //获取月份，0表示1月份
-        month = mCalendar.get(Calendar.MONTH) + 1;
-        day = mCalendar.get(Calendar.DAY_OF_MONTH);
+        int year = mCalendar.get(Calendar.YEAR);
+        int month = mCalendar.get(Calendar.MONTH) + 1;
+        int day = mCalendar.get(Calendar.DAY_OF_MONTH);
+        date = year + "年"+month + "月" +day + "日";
+        data.setText(date);
         Log.d("Data", month + day + "***999999999999");
-        Toast.makeText(getActivity(), month + "月" + day + "日", Toast.LENGTH_SHORT).show();
         addDatas(month,day);
     }
-
-
-
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case 1:
-
-                    hpSrl.setRefreshing(false);
-                    adapter.notifyDataSetChanged();
-                    //swipeRefreshLayout.setEnabled(false);
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
 
     private void addDatas(int i,int y) {
         OkHttp.getAsync(url + i + "/" + y, new OkHttp.DataCallBack() {
@@ -242,19 +222,19 @@ public class HomePageFragment extends BaseFragment implements View.OnClickListen
     //接收日期回传的值
     @Subscribe(sticky = true)
     public void onEventMainThread(FirstEvent_Rili event) {
-        month2 = event.getMonth();
-        day2 = event.getDay();
-        year = event.getYear();
-//        month=+1;
-        data.setText(year + "-"+(month2+1) + "-" +day2 );
+        int month2 = event.getMonth();
+        int day2 = event.getDay();
+        int year2 = event.getYear();
+        data.setText(year2 + "年"+(month2+1) + "月" +day2 + "日");
         addDatas(month2+1,day2);
     }
-
+    
     //生命周期
     @Override
     public void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);//反注册EventBus
+
     }
     @Override
     public void onDestroyView() {

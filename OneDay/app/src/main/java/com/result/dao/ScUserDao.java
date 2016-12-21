@@ -69,6 +69,45 @@ public class ScUserDao {
             return false;
         }
     }
+    // 数据的删除方法
+    public boolean delete(String e_id) {
+        SQLiteDatabase db= helper.getWritableDatabase();
+        int delete = db.delete("ldd", "e_id = ?", new String[]{e_id });
+        if (delete > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    // 数据库的查看方法
+    public boolean isHaveid(String t_id) {
+        List<ScUser> list = new ArrayList<ScUser>();
+        SQLiteDatabase db = helper.getReadableDatabase();
+//        Cursor rs = db.rawQuery("scusers", null, "e_id=?", new String[]{t_id}, null, null, null);
+        if(t_id==null)
+            return  false;
+        Cursor rs = db.rawQuery("select * from ldd where e_id=?", new String[]{t_id});
+        ScUser user=null;
+        while (rs.moveToNext()) {
+            user = new ScUser();
+            int id = rs.getInt(rs.getColumnIndex("id"));
+            String data = rs.getString(rs.getColumnIndex("data"));
+            String title = rs.getString(rs.getColumnIndex("title"));
+            String image = rs.getString(rs.getColumnIndex("image"));
+            String e_id = rs.getString(rs.getColumnIndex("e_id"));
+            user.setId(id);
+            user.setData(data);
+            user.setTitle(title);
+            user.setImage(image);
+            user.setE_id(e_id);
+            list.add(user);
+        }
+        db.close();
+        if(list.size()==0){
+            return false;
+        }
+        return true;
+    }
 
     // 数据库的修改方法
     public boolean update(String data, String title, String image,

@@ -40,6 +40,7 @@ public class CalendarActivity extends AppCompatActivity implements View.OnClickL
     private int year;
     private int day;
     private int month;
+    private CalendarDay data;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,12 +70,17 @@ public class CalendarActivity extends AppCompatActivity implements View.OnClickL
 
     @Override
     public void onClick(View view) {
-        EventBus.getDefault().postSticky(new FirstEvent_Rili(year,day,month));
-        finish();
+        if (data == null){
+            Toast.makeText(getApplicationContext(),"请选择日期",Toast.LENGTH_SHORT).show();
+        }else{
+            EventBus.getDefault().postSticky(new FirstEvent_Rili(year,day,month));
+            finish();
+        }
     }
 
     @Override
     public void onDateSelected(@NonNull MaterialCalendarView widget, @NonNull CalendarDay date, boolean selected) {
+        data = date;
         month = date.getMonth();
         day = date.getDay();
         year = date.getYear();

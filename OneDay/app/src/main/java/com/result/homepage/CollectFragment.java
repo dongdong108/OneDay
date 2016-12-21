@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -102,9 +101,7 @@ public class CollectFragment extends Fragment {
         public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
         }
     }
-
     /********************************************/
-
 
     @Nullable
     @Override
@@ -118,7 +115,6 @@ public class CollectFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         init();
-
         /**
          * RecyclerView的点击和长按事件
          * */
@@ -143,6 +139,7 @@ public class CollectFragment extends Fragment {
             }
         }));
 
+
         collSrl.setColorSchemeResources(R.color.colorAccent,
                 R.color.colorHpBack,
                 R.color.colorPrimaryDark,
@@ -150,42 +147,26 @@ public class CollectFragment extends Fragment {
         collSrl.setSize(SwipeRefreshLayout.LARGE);
         collSrl.setProgressBackgroundColor(R.color.colorHpTitle);
         collSrl.setProgressViewEndTarget(true, 200);
+        aaa();
+    }
+
+    //刷新方法
+    public void aaa(){
         collSrl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                new Thread() {
+                new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         list.clear();
-                        init();
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                        mHandler.sendEmptyMessage(1);
+                        xiba();
+                        collSrl.setRefreshing(false);
                     }
-                }.start();
+                },1000);
             }
         });
     }
 
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case 1:
-
-                    collSrl.setRefreshing(false);
-                    //swipeRefreshLayout.setEnabled(false);
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
 
 
     // 点击跳转到商品详情
@@ -209,18 +190,17 @@ public class CollectFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         ButterKnife.unbind(this);
+        list.clear();
     }
     /*适配器*/
     class MyCollRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
         private Context context;
         private List<ScUser> list;
-        private ScUserDao dao;
 
 
         public MyCollRecyclerViewAdapter(Context context, List<ScUser> list) {
             this.context = context;
             this.list = list;
-            dao = new ScUserDao(context);
         }
 
         @Override
@@ -274,6 +254,11 @@ public class CollectFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        xiba();
+    }
 }
 
 

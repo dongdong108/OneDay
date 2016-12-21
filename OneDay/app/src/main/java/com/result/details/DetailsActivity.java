@@ -3,11 +3,9 @@ package com.result.details;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -38,8 +36,6 @@ public class DetailsActivity extends AppCompatActivity implements AppBarLayout.O
     AppBarLayout detailsAbl;
     @Bind(R.id.fab_add_comment)
     FloatingActionButton fabAddComment;
-    @Bind(R.id.collapsingToolbarLayout)
-    CollapsingToolbarLayout collapsingToolbarLayout;
     @Bind(R.id.getails_iv)
     ImageView getailsIv;
     @Bind(R.id.getails_tv_content)
@@ -49,6 +45,8 @@ public class DetailsActivity extends AppCompatActivity implements AppBarLayout.O
     private HpDetailsBean hdb;
     private ScUserDao scdao;
     private ScUser sc;
+    //判断收藏按钮
+    private boolean ishave;
 
 
     @Override
@@ -57,28 +55,20 @@ public class DetailsActivity extends AppCompatActivity implements AppBarLayout.O
         setContentView(R.layout.activity_details);
         ButterKnife.bind(this);
 
-
         //注册EventBus，哪里需要值哪里就需要注册
         EventBus.getDefault().register(this);
-
-
+        //AppBarLayout滑动方法
         detailsAbl.addOnOffsetChangedListener(this);
         fabAddComment.setOnClickListener(this);
         scdao = new ScUserDao(this);
-
     }
 
     @Subscribe(sticky = true)
     public void onEventMainThread(CollEvent event) {
         sc = event.getData();
         id = sc.getE_id();
-
-        //获取数据
         getDatas();
     }
-
-
-
 
     @Override
     public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
@@ -92,7 +82,6 @@ public class DetailsActivity extends AppCompatActivity implements AppBarLayout.O
     }
 
     public void getDatas() {
-        Log.i("2222222",url + id);
         OkHttp.getAsync(url + id, new OkHttp.DataCallBack() {
             @Override
             public void requestFailure(Request request, IOException e) {
@@ -104,8 +93,7 @@ public class DetailsActivity extends AppCompatActivity implements AppBarLayout.O
                 Gson gson = new Gson();
 
                 hdb = gson.fromJson(result,HpDetailsBean.class);
-                Toast.makeText(DetailsActivity.this,hdb.toString(),Toast.LENGTH_SHORT).show();
-
+                //设置数据
                 setView(hdb.getResult().get(0).getPicUrl().get(0).getUrl(),hdb.getResult().get(0).getContent(),hdb.getResult().get(0).getTitle());
 
             }
@@ -113,6 +101,7 @@ public class DetailsActivity extends AppCompatActivity implements AppBarLayout.O
     }
     //设置数据方法
     public void setView(String url,String content,String title){
+        //加载图片
         Glide.with(DetailsActivity.this)
                 .load(url)
                 .error(R.mipmap.default_img)
@@ -135,12 +124,24 @@ public class DetailsActivity extends AppCompatActivity implements AppBarLayout.O
     @Override
     public void onClick(View view) {
         switch (view.getId()){
+            //收藏按钮的点击方法
             case R.id.fab_add_comment:
-                Log.e("data",sc.getData());
-                Log.e("title",hdb.getResult().get(0).getTitle());
-                Log.e("url",hdb.getResult().get(0).getPicUrl().get(0).getUrl());
-                Log.e("e_id",sc.getE_id());
-                boolean inserts = scdao.insert(sc.getData(), hdb.getResult().get(0).getTitle(), hdb.getResult().get(0).getPicUrl().get(0).getUrl(),sc.getE_id());
+                ishave=!ishave;
+
+                if (ishave){
+                    //添加到数据库
+                    try {
+                        scdao.insert(sc.getData(), hdb.getResult().get(0).getTitle(), hdb.getResult().get(0).getPicUrl().get(0).getUrl(),sc.getE_id());
+                        fabAddComment.setImageResource(R.mipmap.ic_like);
+                    }catch (Exception e){
+                        Toast.makeText(getApplicationContext(),"不可收藏",Toast.LENGTH_SHORT).show();
+                    }
+
+                }else {
+                    //删除，根据e_id
+                    scdao.delete(id);
+                    fabAddComment.setImageResource(R.mipmap.ic_toolbar_like_n);
+                }
                 break;
         }
     }
@@ -150,10 +151,17 @@ public class DetailsActivity extends AppCompatActivity implements AppBarLayout.O
         super.onDestroy();
         EventBus.getDefault().unregister(this);//反注册EventBus
     }
+
     @Override
     protected void onResume() {
         super.onResume();
         detailsAbl.addOnOffsetChangedListener(this);
+        ishave = scdao.isHaveid(id);
+        if (ishave){
+            fabAddComment.setImageResource(R.mipmap.ic_like);
+        }else {
+            fabAddComment.setImageResource(R.mipmap.ic_unlike);
+        }
     }
 
     @Override

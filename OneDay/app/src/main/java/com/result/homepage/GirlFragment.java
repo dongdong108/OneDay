@@ -3,7 +3,6 @@ package com.result.homepage;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -38,7 +37,7 @@ import okhttp3.Request;
  * date: 2016/12/16 10:41
  * update: 2016/12/16
  */
-public class GirlFragment extends BaseFragment {
+public class GirlFragment extends BaseFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     @Bind(R.id.girl_rl)
     RecyclerView girlRl;
@@ -47,27 +46,13 @@ public class GirlFragment extends BaseFragment {
     @Bind(R.id.fab_add_comment)
     FloatingActionButton fabAddComment;
     private int type;
-    private String url = "http://gank.io/api/data/%E7%A6%8F%E5%88%A9/16/";
-    private int i = 1;
+    private MyGirlRecyclerViewAdapter adapter;
+    private int pageSize = 16;
+    private int page = 1;
+    private boolean isFirst=true;
+
     private List<GirlBean.ResultsBean> list = new ArrayList<>();
 
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case 1:
-
-                    girlSrl.setRefreshing(false);
-
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
-    private MyGirlRecyclerViewAdapter adapter;
-    private GridLayoutManager layoutManager;
 
     @Nullable
     @Override
@@ -88,44 +73,10 @@ public class GirlFragment extends BaseFragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (type != -1) {
-            list.clear();
-            //获取数据方法
-            getDatas();
-            //点击置顶
-            fabAddComment.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    girlRl.smoothScrollToPosition(0);
-                }
-            });
 
-            girlSrl.setColorSchemeResources(R.color.colorAccent,
-                    R.color.colorHpBack,
-                    R.color.colorPrimaryDark,
-                    R.color.colorPrimary);
-            girlSrl.setSize(SwipeRefreshLayout.LARGE);
-            girlSrl.setProgressBackgroundColor(R.color.colorHpTitle);
-            girlSrl.setProgressViewEndTarget(true, 200);
-            //下拉加载
-            girlSrl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    new Thread() {
-                        @Override
-                        public void run() {
-//                            list.clear();
-                            getDatas();
-                            try {
-                                Thread.sleep(3000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            mHandler.sendEmptyMessage(1);
-                        }
-                    }.start();
-                }
-            });
-            //RecyclerView滑动监听
+            girlRl.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+            getData(page, pageSize, isFirst);
+            setSwipe();
             girlRl.addOnScrollListener(new RecyclerView.OnScrollListener() {
                 @Override
                 public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
@@ -135,21 +86,36 @@ public class GirlFragment extends BaseFragment {
                 @Override
                 public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                     super.onScrolled(recyclerView, dx, dy);
-                    if (isSlideToBottom(girlRl)){
-                        Toast.makeText(getActivity(),"滑到底部了", Toast.LENGTH_SHORT).show();
-                        i++;
-                        getDatas();
+                    if (isSlideToBottom(girlRl)) {
+                        Toast.makeText(getActivity(), "正在加载", Toast.LENGTH_SHORT).show();
+                        page++;
+                        isFirst = false;
+                        getData(page, pageSize, isFirst);
 
                     }
                 }
             });
-
-
+            fabAddComment.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    fabAddComment.setBackgroundResource(R.mipmap.ic_about);
+                    girlRl.smoothScrollToPosition(0);
+                }
+            });
         }
     }
+    private void setSwipe() {
+        girlSrl.setOnRefreshListener(this);//设置下拉监听
+        girlSrl.setSize(SwipeRefreshLayout.DEFAULT);//设置刷新进入圈的大小
+        girlSrl.setColorSchemeResources(R.color.colorAccent,
+                R.color.colorHpBack,
+                R.color.colorPrimaryDark,
+                R.color.colorPrimary);
+        girlSrl.setProgressBackgroundColor(R.color.colorHpTitle);
+    }
 
-    private void getDatas() {
-        OkHttp.getAsync(url+(i+""), new OkHttp.DataCallBack() {
+    public void getData(int page, int pageSize, final boolean isFirs) {
+        OkHttp.getAsync("http://gank.io/api/data/福利/"+pageSize+"/"+page, new OkHttp.DataCallBack() {
             @Override
             public void requestFailure(Request request, IOException e) {
 
@@ -157,29 +123,54 @@ public class GirlFragment extends BaseFragment {
 
             @Override
             public void requestSuccess(String result) throws Exception {
-
-                Gson gson = new Gson();
-                GirlBean girlBean = gson.fromJson(result, GirlBean.class);
-                list.addAll(girlBean.getResults());
-
-                layoutManager = new GridLayoutManager(getActivity(), 2);
-                girlRl.setLayoutManager(layoutManager);
-                adapter = new MyGirlRecyclerViewAdapter(getActivity(), list);
-                girlRl.setAdapter(adapter);
-                adapter.setOnItemClickListener(new MyGirlRecyclerViewAdapter.OnRecyclerViewItemClickListener() {
-                    @Override
-                    public void onItemClick(View view, String data) {
-                        //发布事件
-                        EventBus.getDefault().postSticky(
-                                new GirlEvent(data));
-                        startActivity(new Intent(getActivity(), GirlDetailsActivity.class));
-                    }
-                });
+                Gson gson=new Gson();
+                GirlBean bean = gson.fromJson(result,GirlBean.class);
+                list.addAll(bean.getResults());
+                setAdapter(isFirs);
+                isFirst=false;
             }
         });
     }
+
+    private void setAdapter(Boolean isFirst) {
+        if(isFirst){
+            adapter = new MyGirlRecyclerViewAdapter(getActivity(),list);
+            girlRl.setAdapter(adapter);
+        }else{
+            adapter.notifyDataSetChanged();
+        }
+
+        adapter.setOnItemClickListener(new MyGirlRecyclerViewAdapter.OnRecyclerViewItemClickListener() {
+            @Override
+            public void onItemClick(View view, String data) {
+                //发布事件
+                EventBus.getDefault().postSticky(
+                        new GirlEvent(data));
+                startActivity(new Intent(getActivity(), GirlDetailsActivity.class));
+            }
+        });
+    }
+
+    //下拉刷新
+    @Override
+    public void onRefresh() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                list.clear();
+                page=1;
+                pageSize=16;
+                getData(page,pageSize,true);
+                setAdapter(true);
+                girlSrl.setRefreshing(false);//设置刷新状态
+            }
+        },1000);
+    }
+
+
     protected boolean isSlideToBottom(RecyclerView recyclerView) {
         if (recyclerView == null) return false;
+        //已经滑动的高度+整体的高度>整体高度
         if (recyclerView.computeVerticalScrollExtent() + recyclerView.computeVerticalScrollOffset() >= recyclerView.computeVerticalScrollRange())
             return true;
         return false;

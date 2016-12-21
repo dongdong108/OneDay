@@ -13,6 +13,7 @@ import java.io.Serializable;
 public class CollEvent implements Serializable{
     private ScUser data;
 
+
     public CollEvent(ScUser data) {
         this.data = data;
     }
@@ -20,4 +21,5 @@ public class CollEvent implements Serializable{
     public ScUser getData() {
         return data;
     }
+
 }
